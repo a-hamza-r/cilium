@@ -584,36 +584,52 @@ jobs:
           # always go through the correct gateway
           EXTRA+=("--expected-drop-reasons=+No egress gateway found")
 
-          cilium connectivity test --include-unsafe-tests --collect-sysdump-on-failure \
+          # Check if the upgrade broke the "conn-disrupt-test" tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
             --include-conn-disrupt-test \
+            --test "no-interrupted-connections" \
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --flush-ct \
-            --test "seq-.*" \
-            --sysdump-hubble-flows-count=1000000 --sysdump-hubble-flows-timeout=5m \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
             --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
             --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
             --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
             "${EXTRA[@]}"
 
-          # --flush-ct interrupts the flows, so we need to set up again.
-          cilium connectivity test --include-conn-disrupt-test --conn-disrupt-test-setup \
-            --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
-            --conn-disrupt-dispatch-interval 0ms
+          # Run only the sequential connectivity tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
+            --flush-ct \
+            --test "seq-.*" \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
+            --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
+            --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
+            --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
+            "${EXTRA[@]}"
 
-          cilium connectivity test --include-unsafe-tests --collect-sysdump-on-failure \
-            --include-conn-disrupt-test \
-            --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
+          # Run only the non-sequential connectivity tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
             --flush-ct \
             --test-concurrency=${{ env.test_concurrency }} \
             --test "!seq-.*" \
-            --sysdump-hubble-flows-count=1000000 --sysdump-hubble-flows-timeout=5m \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
             --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
             --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
             --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
             "${EXTRA[@]}"
 
-          # --flush-ct interrupts the flows, so we need to set up again.
-          cilium connectivity test --include-conn-disrupt-test --conn-disrupt-test-setup \
+          # --flush-ct interrupts the flows, so we need to set up again before downgrade.
+          cilium connectivity test \
+            --include-conn-disrupt-test \
+            --conn-disrupt-test-setup \
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --conn-disrupt-dispatch-interval 0ms
 
@@ -644,29 +660,43 @@ jobs:
           # always go through the correct gateway
           EXTRA+=("--expected-drop-reasons=+No egress gateway found")
 
-          cilium connectivity test --include-unsafe-tests --collect-sysdump-on-failure \
+          # Check if the downgrade broke the "conn-disrupt-test" tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
             --include-conn-disrupt-test \
+            --test "no-interrupted-connections" \
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --flush-ct \
-            --test "seq-.*" \
-            --sysdump-hubble-flows-count=1000000 --sysdump-hubble-flows-timeout=5m \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
             --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
             --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
             --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
             "${EXTRA[@]}"
 
-          # --flush-ct interrupts the flows, so we need to set up again.
-          cilium connectivity test --include-conn-disrupt-test --conn-disrupt-test-setup \
-            --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
-            --conn-disrupt-dispatch-interval 0ms
-
-          cilium connectivity test --include-unsafe-tests --collect-sysdump-on-failure \
-            --include-conn-disrupt-test \
-            --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
+          # Run only the sequential connectivity tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
             --flush-ct \
-            --test "!seq-.*" \
+            --test "seq-.*" \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
+            --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
+            --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
+            --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
+            "${EXTRA[@]}"
+
+          # Run only the non-sequential connectivity tests
+          cilium connectivity test \
+            --include-unsafe-tests \
+            --collect-sysdump-on-failure \
+            --flush-ct \
             --test-concurrency=${{ env.test_concurrency }} \
-            --sysdump-hubble-flows-count=1000000 --sysdump-hubble-flows-timeout=5m \
+            --test "!seq-.*" \
+            --sysdump-hubble-flows-count=1000000 \
+            --sysdump-hubble-flows-timeout=5m \
             --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
             --junit-file "cilium-junits/${{ env.job_name }} (${{ matrix.name }}).xml" \
             --junit-property github_job_step="Run tests upgrade 2 (${{ matrix.name }})" \
