@@ -115,6 +115,20 @@ struct {
 /* Private per-EP map for internal tail calls. Its bpffs pin is replaced every
  * time the BPF object is loaded. An existing pinned map is never reused.
  */
+struct {
+  __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
+  __type(key, __u32);
+  __type(value, __u32);
+  __uint(pinning, LIBBPF_PIN_BY_NAME);
+  __uint(max_entries, CILIUM_CALL_SIZE);
+} CALLS_MAP __section_maps_btf;
+#endif /* SKIP_CALLS_MAP */
+
+#if 0
+#ifndef SKIP_CALLS_MAP
+/* Private per-EP map for internal tail calls. Its bpffs pin is replaced every
+ * time the BPF object is loaded. An existing pinned map is never reused.
+ */
 struct bpf_elf_map __section_maps CALLS_MAP = {
 	.type		= BPF_MAP_TYPE_PROG_ARRAY,
 	.id		= CILIUM_MAP_CALLS,
@@ -124,6 +138,7 @@ struct bpf_elf_map __section_maps CALLS_MAP = {
 	.max_elem	= CILIUM_CALL_SIZE,
 };
 #endif /* SKIP_CALLS_MAP */
+#endif
 
 #if defined(ENABLE_CUSTOM_CALLS) && defined(CUSTOM_CALLS_MAP)
 /* Private per-EP map for tail calls to user-defined programs.
